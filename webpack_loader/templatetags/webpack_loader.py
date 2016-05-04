@@ -25,8 +25,10 @@ def render_as_tags(bundle, type):
     else:
         urlFormat = '{0}'
 
-    print 'type: {:}'.format(type)
-    print 'bundle instance: {}'.format(type(bundle))
+    print 'type:'
+    print type
+    print 'bundle instance: {}'
+    print type(bundle)
 
     for chunk in bundle:
         if chunk['name'].endswith('.js'):
