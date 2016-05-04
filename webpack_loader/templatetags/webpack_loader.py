@@ -23,7 +23,7 @@ def render_as_tags(bundle):
             ).format(chunk['url']))
         elif chunk['name'].endswith('.css'):
             tags.append((
-                '<link type="text/css" href="\{\% static \'{0}\' \%\}" rel="stylesheet"/>'
+                '<link type="text/css" href="{% raw %}{{% static{% endraw %} \'{0}\' {% raw %}%}}{% endraw %}" rel="stylesheet"/>'
             ).format(chunk['url']))
     return mark_safe('\n'.join(tags))
 
