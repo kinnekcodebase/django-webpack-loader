@@ -26,6 +26,7 @@ def render_as_tags(bundle, type):
         urlFormat = '{0}'
 
     print 'type: {:}'.format(type)
+    print 'bundle instance: {}'.format(type(bundle))
 
     for chunk in bundle:
         if chunk['name'].endswith('.js'):
@@ -36,7 +37,7 @@ def render_as_tags(bundle, type):
             tags.append((tagString).format(chunk['url']))
 
     print 'tags: \n%s' % "*" * 80
-    print '\n'.join(tags)
+    pp.pprint(tags)
 
     print "*" * 80
 
