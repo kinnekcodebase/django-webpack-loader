@@ -1,3 +1,4 @@
+from pprint import PrettyPrinter
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -17,15 +18,19 @@ def filter_by_extension(bundle, extension):
 def render_as_tags(bundle, type):
     tags = []
 
+    pp = PrettyPrinter(indent=4, width=80)
+
     if type is 'static':
         urlFormat = "{{% static '{0}' %}}"
     else:
         urlFormat = '{0}'
 
     print 'type: {:}'.format(type)
-    print 'bundle: {:}'.format("; ".join(bundle))
+    print 'bundle:'
 
-    for chunk in bundle:
+    pp.pprint(bundle)
+
+    for chunk in bundle.iterkeys():
         if chunk['name'].endswith('.js'):
             tagString = '<script type="text/javascript" src="%s"></script>'%urlFormat
         elif chunk['name'].endswith('.css'):
