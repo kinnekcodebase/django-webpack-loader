@@ -26,7 +26,7 @@ def render_as_tags(bundle, type):
         if chunk['name'].endswith('.js'):
             tagString = '<script type="text/javascript" src="' + urlFormat + '"></script>'
         elif chunk['name'].endswith('.css'):
-            tagString = '<link type="text/css" href="' + urlFormat + ' rel="stylesheet"/>'
+            tagString = '<link type="text/css" href="' + urlFormat + '" rel="stylesheet"/>'
 
         tags.append((tagString).format(chunk['url']))
 
