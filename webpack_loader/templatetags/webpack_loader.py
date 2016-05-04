@@ -45,6 +45,7 @@ def render_as_tags(bundle, type):
 
 
 def _get_bundle(bundle_name, extension, config):
+    print "Hi Thalida - look at me now."
     bundle = get_loader(config).get_bundle(bundle_name)
     if extension:
         bundle = filter_by_extension(bundle, extension)
