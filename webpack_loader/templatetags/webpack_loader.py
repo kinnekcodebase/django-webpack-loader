@@ -14,17 +14,22 @@ def filter_by_extension(bundle, extension):
             yield chunk
 
 
-def render_as_tags(bundle):
+def render_as_tags(bundle, type):
     tags = []
+
+    if type is 'static':
+        urlFormat = "{{% static '{0}' %}}"
+    else:
+        urlFormat = '{0}'
+
     for chunk in bundle:
         if chunk['name'].endswith('.js'):
-            tags.append((
-                '<script type="text/javascript" src="{{% static \'{0}\' %}}"></script>'
-            ).format(chunk['url']))
+            tagString = '<script type="text/javascript" src="' + urlFormat + '"></script>'
         elif chunk['name'].endswith('.css'):
-            tags.append((
-                '<link type="text/css" href="{{% static \'{0}\' %}}" rel="stylesheet"/>'
-            ).format(chunk['url']))
+            tagString = '<link type="text/css" href="' + urlFormat + ' rel="stylesheet"/>'
+
+        tags.append((tagString).format(chunk['url']))
+
     return mark_safe('\n'.join(tags))
 
 
@@ -36,8 +41,8 @@ def _get_bundle(bundle_name, extension, config):
 
 
 @register.simple_tag
-def render_bundle(bundle_name, extension=None, config='DEFAULT'):
-    return render_as_tags(_get_bundle(bundle_name, extension, config))
+def render_bundle(bundle_name, extension=None, format_type=None, config='DEFAULT'):
+    return render_as_tags(_get_bundle(bundle_name, extension, config), format_type)
 
 
 @register.simple_tag
