@@ -25,11 +25,6 @@ def render_as_tags(bundle, type):
     else:
         urlFormat = '{0}'
 
-    print 'type:'
-    print type
-    print 'bundle instance: {}'
-    print type(bundle)
-
     for chunk in bundle:
         if chunk['name'].endswith('.js'):
             tagString = '<script type="text/javascript" src="%s"></script>'%urlFormat
@@ -38,7 +33,7 @@ def render_as_tags(bundle, type):
             tagString = '<link type="text/css" href="%s" rel="stylesheet"/>'%urlFormat
             tags.append((tagString).format(chunk['url']))
 
-    print 'tags: \n%s' % "*" * 80
+    print 'tags: %d \n%s' % (len(tags), "*" * 80)
     pp.pprint(tags)
 
     print "*" * 80
