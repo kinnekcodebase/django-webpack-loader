@@ -29,7 +29,7 @@ def render_as_tags(bundle):
 
 
 def _get_bundle(bundle_name, extension, config):
-    bundle = get_loader(config).get_bundle(bundle_name)
+    bundle = get_loader(config, bundle_name).get_bundle(bundle_name)
     if extension:
         bundle = filter_by_extension(bundle, extension)
     return bundle

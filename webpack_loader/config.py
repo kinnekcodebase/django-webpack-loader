@@ -10,6 +10,7 @@ DEFAULT_CONFIG = {
     'DEFAULT': {
         'CACHE': not settings.DEBUG,
         'BUNDLE_DIR_NAME': 'webpack_bundles/',
+        'STATS_PATH': './',
         'STATS_FILE': 'webpack-stats.json',
         # FIXME: Explore usage of fsnotify
         'POLL_INTERVAL': 0.1,

@@ -7,29 +7,37 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from .exceptions import WebpackError, WebpackLoaderBadStatsError
 from .config import load_config
 
+import os.path
+
 
 class WebpackLoader(object):
     _assets = {}
 
-    def __init__(self, name='DEFAULT'):
+    def __init__(self, name='DEFAULT', bundle=None):
         self.name = name
+        self.bundle = bundle
+        self.key = name + bundle;
         self.config = load_config(self.name)
 
     def _load_assets(self):
+        statsPath = self.config['STATS_PATH'].replace('[bundle]', self.bundle)
+        statsFile = self.config['STATS_FILE']
+        formattedPath = os.path.join(statsPath, statsFile)
+
         try:
-            with open(self.config['STATS_FILE']) as f:
+            with open(formattedPath) as f:
                 return json.load(f)
         except IOError:
             raise IOError(
                 'Error reading {0}. Are you sure webpack has generated '
                 'the file and the path is correct?'.format(
-                    self.config['STATS_FILE']))
+                    formattedPath))
 
     def get_assets(self):
         if self.config['CACHE']:
-            if self.name not in self._assets:
-                self._assets[self.name] = self._load_assets()
-            return self._assets[self.name]
+            if self.key not in self._assets:
+                self._assets[self.key] = self._load_assets()
+            return self._assets[self.key]
         return self._load_assets()
 
     def filter_chunks(self, chunks):
