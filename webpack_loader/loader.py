@@ -29,8 +29,8 @@ class WebpackLoader(object):
                 return json.load(f)
         except IOError:
             raise IOError(
-                'Error reading {0}. Are you sure webpack has generated '
-                'the file and the path is correct?'.format(
+                'Error reading {0}. Are you sure webpack/django webpack loader has generated '
+                'the correct stats path?'.format(
                     formattedPath))
 
     def get_assets(self):
