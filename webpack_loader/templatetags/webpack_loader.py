@@ -2,7 +2,7 @@ from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
 
-from ..utils import get_loader, get_url
+from ..utils import get_loader, get_first_url
 
 register = template.Library()
 
@@ -71,4 +71,4 @@ def get_url(bundle_name, extension=None, config='DEFAULT'):
     """
     Returns first file url
     """
-    return get_url(bundle_name, extension=extension, config=config)
+    return get_first_url(bundle_name, extension=extension, config=config)
