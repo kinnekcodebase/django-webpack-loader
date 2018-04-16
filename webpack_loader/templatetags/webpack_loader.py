@@ -2,7 +2,7 @@ from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
 
-from ..utils import get_loader
+from ..utils import get_loader, get_first_url
 
 register = template.Library()
 
@@ -65,3 +65,10 @@ def get_files(bundle_name, extension=None, config='DEFAULT'):
     :return: a list of matching chunks
     """
     return list(_get_bundle(bundle_name, extension, config))
+
+@register.assignment_tag
+def get_url(bundle_name, extension=None, config='DEFAULT'):
+    """
+    Returns first file url
+    """
+    return get_first_url(bundle_name, extension=extension, config=config)

@@ -16,7 +16,7 @@ class WebpackLoader(object):
     def __init__(self, name='DEFAULT', bundle=None):
         self.name = name
         self.bundle = bundle
-        self.key = name + bundle;
+        self.key = name + bundle
         self.config = load_config(self.name)
 
     def _load_assets(self):
