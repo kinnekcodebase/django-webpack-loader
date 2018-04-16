@@ -33,4 +33,4 @@ def get_files(bundle_name, extension=None, config='DEFAULT'):
 def get_first_url(bundle_name, extension=None, config='DEFAULT'):
     '''Returns first url of files from named bundle'''
     files = get_files(bundle_name, extension, config)
-    return files[0].get('url') if files and files[0] and files[0].get('url') else None
+    return next(iter([file.get('url') for file in files or [] if file.get('url')]), None)
