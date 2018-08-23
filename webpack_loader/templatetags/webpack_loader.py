@@ -1,8 +1,7 @@
-from django import template
+from django import template, VERSION
 from django.conf import settings
 from django.utils.safestring import mark_safe
-
-from ..utils import get_loader, get_first_url
+from .. import utils
 
 register = template.Library()
 
@@ -29,28 +28,27 @@ def render_as_tags(bundle):
 
 
 def _get_bundle(bundle_name, extension, config):
-    bundle = get_loader(config, bundle_name).get_bundle(bundle_name)
+    bundle = utils.get_loader(config, bundle_name).get_bundle(bundle_name)
     if extension:
         bundle = filter_by_extension(bundle, extension)
     return bundle
 
 
 @register.simple_tag
-def render_bundle(bundle_name, extension=None, config='DEFAULT'):
-    return render_as_tags(_get_bundle(bundle_name, extension, config))
+def render_bundle(bundle_name, extension=None, config='DEFAULT', attrs=''):
+    tags = utils.get_as_tags(bundle_name, extension=extension, config=config, attrs=attrs)
+    return mark_safe('\n'.join(tags))
 
 
 @register.simple_tag
 def webpack_static(asset_name, config='DEFAULT'):
-    return "{0}{1}".format(
-        get_loader(config).get_assets().get(
-            'publicPath', getattr(settings, 'STATIC_URL')
-        ),
-        asset_name
-    )
+    return utils.get_static(asset_name, config=config)
 
 
-@register.assignment_tag
+assignment_tag = register.simple_tag if VERSION >= (1, 9) else register.assignment_tag
+
+
+@assignment_tag
 def get_files(bundle_name, extension=None, config='DEFAULT'):
     """
     Returns all chunks in the given bundle.
@@ -64,11 +62,12 @@ def get_files(bundle_name, extension=None, config='DEFAULT'):
     :param config: (optional) the name of the configuration
     :return: a list of matching chunks
     """
-    return list(_get_bundle(bundle_name, extension, config))
+    return utils.get_files(bundle_name, extension=extension, config=config)
+
 
 @register.assignment_tag
 def get_url(bundle_name, extension=None, config='DEFAULT'):
     """
     Returns first file url
     """
-    return get_first_url(bundle_name, extension=extension, config=config)
+    return utils.get_first_url(bundle_name, extension=extension, config=config)

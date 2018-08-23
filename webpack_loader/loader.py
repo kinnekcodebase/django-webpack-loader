@@ -1,10 +1,16 @@
 import json
 import time
+from io import open
 
 from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 
-from .exceptions import WebpackError, WebpackLoaderBadStatsError
+from .exceptions import (
+    WebpackError,
+    WebpackLoaderBadStatsError,
+    WebpackLoaderTimeoutError,
+    WebpackBundleLookupError
+)
 from .config import load_config
 
 import os.path
@@ -25,7 +31,7 @@ class WebpackLoader(object):
         formattedPath = os.path.join(statsPath, statsFile)
 
         try:
-            with open(formattedPath) as f:
+            with open(formattedPath, encoding="utf-8") as f:
                 return json.load(f)
         except IOError:
             raise IOError(
@@ -61,20 +67,37 @@ class WebpackLoader(object):
     def get_bundle(self, bundle_name):
         assets = self.get_assets()
 
+        # poll when debugging and block request until bundle is compiled
+        # or the build times out
         if settings.DEBUG:
-            # poll when debugging and block request until bundle is compiled
-            # TODO: support timeouts
-            while assets['status'] == 'compiling':
+            timeout = self.config['TIMEOUT'] or 0
+            timed_out = False
+            start = time.time()
+            while assets['status'] == 'compiling' and not timed_out:
                 time.sleep(self.config['POLL_INTERVAL'])
+                if timeout and (time.time() - timeout > start):
+                    timed_out = True
                 assets = self.get_assets()
 
+            if timed_out:
+                raise WebpackLoaderTimeoutError(
+                    "Timed Out. Bundle `{0}` took more than {1} seconds "
+                    "to compile.".format(bundle_name, timeout)
+                )
+
         if assets.get('status') == 'done':
-            chunks = assets['chunks'][bundle_name]
+            chunks = assets['chunks'].get(bundle_name, None)
+            if chunks is None:
+                raise WebpackBundleLookupError('Cannot resolve bundle {0}.'.format(bundle_name))
             return self.filter_chunks(chunks)
 
         elif assets.get('status') == 'error':
             if 'file' not in assets:
                 assets['file'] = ''
+            if 'error' not in assets:
+                assets['error'] = 'Unknown Error'
+            if 'message' not in assets:
+                assets['message'] = ''
             error = u"""
             {error} in {file}
             {message}

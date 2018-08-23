@@ -14,7 +14,8 @@ DEFAULT_CONFIG = {
         'STATS_FILE': 'webpack-stats.json',
         # FIXME: Explore usage of fsnotify
         'POLL_INTERVAL': 0.1,
-        'IGNORE': ['.+\.hot-update.js', '.+\.map']
+        'TIMEOUT': None,
+        'IGNORE': [r'.+\.hot-update.js', r'.+\.map']
     }
 }
 

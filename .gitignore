@@ -1,3 +1,8 @@
+venv/
+
+# auto generated
+README.rst
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -75,3 +80,7 @@ tests/node_modules/
 tests/assets/bundles/
 tests/webpack-stats.json
 tests/webpack-stats-app2.json
+
+# PyCharm IDE
+.idea
+.vscode

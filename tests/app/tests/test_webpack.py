@@ -12,7 +12,9 @@ from django_jinja.builtins import DEFAULT_EXTENSIONS
 from unittest2 import skipIf
 from webpack_loader.exceptions import (
     WebpackError,
-    WebpackLoaderBadStatsError
+    WebpackLoaderBadStatsError,
+    WebpackLoaderTimeoutError,
+    WebpackBundleLookupError
 )
 from webpack_loader.utils import get_loader
 
@@ -65,6 +67,20 @@ class LoaderTestCase(TestCase):
         self.assertEqual(main[0]['path'], os.path.join(settings.BASE_DIR, 'assets/bundles/main.js'))
         self.assertEqual(main[1]['path'], os.path.join(settings.BASE_DIR, 'assets/bundles/styles.css'))
 
+    def test_js_gzip_extract(self):
+        self.compile_bundles('webpack.config.gzipTest.js')
+        assets = get_loader(DEFAULT_CONFIG).get_assets()
+        self.assertEqual(assets['status'], 'done')
+        self.assertIn('chunks', assets)
+
+        chunks = assets['chunks']
+        self.assertIn('main', chunks)
+        self.assertEqual(len(chunks), 1)
+
+        main = chunks['main']
+        self.assertEqual(main[0]['path'], os.path.join(settings.BASE_DIR, 'assets/bundles/main.js.gz'))
+        self.assertEqual(main[1]['path'], os.path.join(settings.BASE_DIR, 'assets/bundles/styles.css'))
+
     def test_static_url(self):
         self.compile_bundles('webpack.config.publicPath.js')
         assets = get_loader(DEFAULT_CONFIG).get_assets()
@@ -93,11 +109,11 @@ class LoaderTestCase(TestCase):
         view = TemplateView.as_view(template_name='home.html')
         request = self.factory.get('/')
         result = view(request)
-        self.assertIn('<link type="text/css" href="/static/bundles/styles.css" rel="stylesheet"/>', result.rendered_content)
-        self.assertIn('<script type="text/javascript" src="/static/bundles/main.js"></script>', result.rendered_content)
+        self.assertIn('<link type="text/css" href="/static/bundles/styles.css" rel="stylesheet" />', result.rendered_content)
+        self.assertIn('<script type="text/javascript" src="/static/bundles/main.js" async charset="UTF-8"></script>', result.rendered_content)
 
-        self.assertIn('<link type="text/css" href="/static/bundles/styles-app2.css" rel="stylesheet"/>', result.rendered_content)
-        self.assertIn('<script type="text/javascript" src="/static/bundles/app2.js"></script>', result.rendered_content)
+        self.assertIn('<link type="text/css" href="/static/bundles/styles-app2.css" rel="stylesheet" />', result.rendered_content)
+        self.assertIn('<script type="text/javascript" src="/static/bundles/app2.js" ></script>', result.rendered_content)
         self.assertIn('<img src="/static/my-image.png"/>', result.rendered_content)
 
         view = TemplateView.as_view(template_name='only_files.html')
@@ -142,16 +158,23 @@ class LoaderTestCase(TestCase):
         with self.settings(**settings):
             request = self.factory.get('/')
             result = view(request)
-            self.assertIn('<link type="text/css" href="/static/bundles/styles.css" rel="stylesheet"/>', result.rendered_content)
-            self.assertIn('<script type="text/javascript" src="/static/bundles/main.js"></script>', result.rendered_content)
+            self.assertIn('<link type="text/css" href="/static/bundles/styles.css" rel="stylesheet" />', result.rendered_content)
+            self.assertIn('<script type="text/javascript" src="/static/bundles/main.js" async charset="UTF-8"></script>', result.rendered_content)
 
     def test_reporting_errors(self):
-        #TODO:
         self.compile_bundles('webpack.config.error.js')
         try:
             get_loader(DEFAULT_CONFIG).get_bundle('main')
         except WebpackError as e:
             self.assertIn("Cannot resolve module 'the-library-that-did-not-exist'", str(e))
+
+    def test_missing_bundle(self):
+        missing_bundle_name = 'missing_bundle'
+        self.compile_bundles('webpack.config.simple.js')
+        try:
+            get_loader(DEFAULT_CONFIG).get_bundle(missing_bundle_name)
+        except WebpackBundleLookupError as e:
+            self.assertIn('Cannot resolve bundle {0}'.format(missing_bundle_name), str(e))
 
     def test_missing_stats_file(self):
         stats_file = settings.WEBPACK_LOADER[DEFAULT_CONFIG]['STATS_FILE']
@@ -165,6 +188,17 @@ class LoaderTestCase(TestCase):
                 'file and the path is correct?'
             ).format(stats_file)
             self.assertIn(expected, str(e))
+
+    def test_timeouts(self):
+        with self.settings(DEBUG=True):
+            with open(
+                settings.WEBPACK_LOADER[DEFAULT_CONFIG]['STATS_FILE'], 'w'
+            ) as stats_file:
+                stats_file.write(json.dumps({'status': 'compiling'}))
+            loader = get_loader(DEFAULT_CONFIG)
+            loader.config['TIMEOUT'] = 0.1
+            with self.assertRaises(WebpackLoaderTimeoutError):
+                loader.get_bundle('main')
 
     def test_bad_status_in_production(self):
         with open(
