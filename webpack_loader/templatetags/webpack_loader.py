@@ -35,3 +35,11 @@ def get_files(bundle_name, extension=None, config='DEFAULT'):
     :return: a list of matching chunks
     """
     return utils.get_files(bundle_name, extension=extension, config=config)
+
+
+@register.assignment_tag    
+def get_url(bundle_name, extension=None, config='DEFAULT'): 
+    """ 
+    Returns first file url  
+    """ 
+    return utils.get_first_url(bundle_name, extension=extension, config=config)
